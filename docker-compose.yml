@@ -1,0 +1,9 @@
+services:
+  fraud-api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data      # put creditcard.csv here for training on the real dataset
+      - ./models:/app/models  # trained artifact persists across restarts
+    restart: unless-stopped
