@@ -1,22 +1,16 @@
-FROM python:3.12-slim
-
-ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
-WORKDIR /app
-
-# Build tools are a fallback for architectures (e.g. s390x on LinuxONE) where a package has no prebuilt wheel.
-RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential gfortran libopenblas-dev curl \
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv python3-pip python3-numpy python3-pandas \
+    python3-scipy python3-sklearn python3-joblib curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
-
+WORKDIR /app
+RUN python3 -m venv --system-site-packages /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
 COPY fraud ./fraud
 COPY scripts ./scripts
 RUN chmod +x scripts/*.sh
-
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=120s \
-  CMD curl -fsS http://localhost:8000/health || exit 1
-
 CMD ["scripts/start.sh"]
